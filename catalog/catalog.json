@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "agents": [
+    {"name": "plan-search", "definition": "agents/plan-search.md"},
+    {"name": "plan-implementer", "definition": "agents/plan-implementer.md"},
+    {"name": "plan-committer", "definition": "agents/plan-committer.md"},
+    {"name": "reviewer", "definition": "agents/reviewer.md"},
+    {"name": "test-runner", "definition": "agents/test-runner.md"}
+  ],
+  "adapters": [
+    {
+      "name": "codex",
+      "instructions": "adapters/codex/ADAPTER.md",
+      "agent_target": ".codex/agents/<agent>.toml",
+      "instruction_targets": ["AGENTS.md"],
+      "skill_targets": [".agents/skills/<skill>/SKILL.md"]
+    },
+    {
+      "name": "claude",
+      "instructions": "adapters/claude/ADAPTER.md",
+      "agent_target": ".claude/agents/<agent>.md",
+      "instruction_targets": ["AGENTS.md", "CLAUDE.md"],
+      "skill_targets": [".claude/skills/<skill>/SKILL.md"]
+    },
+    {
+      "name": "copilot",
+      "instructions": "adapters/copilot/ADAPTER.md",
+      "agent_target": ".github/agents/<agent>.agent.md",
+      "instruction_targets": ["AGENTS.md"],
+      "skill_targets": [
+        ".github/skills/<skill>/SKILL.md",
+        ".agents/skills/<skill>/SKILL.md",
+        ".claude/skills/<skill>/SKILL.md"
+      ]
+    },
+    {
+      "name": "gemini",
+      "instructions": "adapters/gemini/ADAPTER.md",
+      "agent_target": ".gemini/agents/<agent>.md",
+      "instruction_targets": ["AGENTS.md", "GEMINI.md"],
+      "skill_targets": [
+        ".gemini/skills/<skill>/SKILL.md",
+        ".agents/skills/<skill>/SKILL.md"
+      ]
+    }
+  ],
+  "optional_components": [
+    {"name": "plan-examples", "path": "components/plans"}
+  ]
+}
