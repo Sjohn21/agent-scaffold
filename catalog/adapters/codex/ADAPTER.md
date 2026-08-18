@@ -57,9 +57,9 @@ Shared project instructions stay in root `AGENTS.md`; do not duplicate them in
 `.codex/config.toml` or in every agent. Codex loads applicable `AGENTS.md`
 guidance before work begins.
 
-When a project-specific skill passes the installation contract's selection
-criteria, its repository location is `.agents/skills/<skill>/SKILL.md`. Do not
-create a skill merely because this path is supported.
+For a later, separately requested project skill, the compatible repository
+location is `.agents/skills/<skill>/SKILL.md`. This target is informational;
+this installation does not create skills.
 
 Last manually verified: 2026-08-12 against
 <https://learn.chatgpt.com/docs/agent-configuration/subagents> for the project

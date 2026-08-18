@@ -18,7 +18,5 @@ or split such mixed changes. Otherwise stage only the supplied paths and create
 one focused commit. Never push, amend or rebase. Return the commit hash, message
 and paths.
 
-Follow applicable project guidance supplied in your context, including root
-`AGENTS.md` guidance, without rereading the same guidance. If applicable project
-guidance is missing from the context, report that blocker before starting work;
-do not guess at missing guidance or continue silently.
+Follow applicable project guidance already supplied in your context, including
+root `AGENTS.md`, without rereading it.

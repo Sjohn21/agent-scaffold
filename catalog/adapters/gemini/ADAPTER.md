@@ -41,10 +41,11 @@ reachable without replacing existing content: when root `GEMINI.md` does not
 already include equivalent shared guidance, append a small section containing
 `@./AGENTS.md`. Preserve every existing instruction and setting.
 
-When a project-specific skill passes the installation contract's selection
-criteria, prefer `.gemini/skills/<skill>/SKILL.md` for Gemini alone. Gemini also
-discovers `.agents/skills/<skill>/SKILL.md`, which can be a deliberate shared
-native location with Codex or Copilot. Do not use a symlink between locations.
+For a later, separately requested project skill, the compatible targets are
+`.gemini/skills/<skill>/SKILL.md` and `.agents/skills/<skill>/SKILL.md`. This
+metadata is informational; this installation does not create skills. The first
+target is Gemini-specific; the second can be a deliberate shared native
+location with Codex or Copilot. Do not use a symlink between locations.
 
 Last manually verified: 2026-08-07 against
 <https://geminicli.com/docs/core/subagents/> for the project target and Markdown

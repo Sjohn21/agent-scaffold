@@ -173,7 +173,7 @@ class CatalogContractTests(unittest.TestCase):
             )
             self.assertTrue(
                 any(
-                    "agent_target must be a string containing '<agent>'" in error
+                    "agent_target must be a non-empty string" in error
                     for error in errors
                 ),
                 errors,
@@ -223,6 +223,111 @@ class CatalogContractTests(unittest.TestCase):
                     self.assertTrue(
                         any(expected_error in error for error in errors), errors
                     )
+
+    def test_native_target_templates_enforce_safe_paths_and_placeholders(
+        self,
+    ) -> None:
+        cases = {
+            "agent_target": {
+                "absolute": ("/native/<agent>.md", "not absolute"),
+                "Windows drive path": ("C:native/<agent>.md", "not absolute"),
+                "parent traversal": ("../native/<agent>.md", "parent traversal"),
+                "missing placeholder": (
+                    ".native/agents/worker.md",
+                    "exactly one '<agent>'",
+                ),
+                "duplicate placeholder": (
+                    ".native/<agent>/<agent>.md",
+                    "exactly one '<agent>'",
+                ),
+                "wrong placeholder": (
+                    ".native/agents/<skill>.md",
+                    "unsupported placeholder",
+                ),
+                "backslash": (
+                    r".native\agents\<agent>.md",
+                    "backslash separators",
+                ),
+                "valid nested": (".native/nested/agents/<agent>.md", None),
+            },
+            "instruction_targets": {
+                "absolute": ("/AGENTS.md", "not absolute"),
+                "parent traversal": ("../AGENTS.md", "parent traversal"),
+                "placeholder": ("docs/<agent>/AGENTS.md", "must not contain"),
+                "backslash": (r"docs\AGENTS.md", "backslash separators"),
+                "empty segment": ("docs//AGENTS.md", "empty path segment"),
+                "valid nested": ("docs/agents/AGENTS.md", None),
+            },
+            "skill_targets": {
+                "absolute": ("/skills/<skill>/SKILL.md", "not absolute"),
+                "parent traversal": (
+                    "../skills/<skill>/SKILL.md",
+                    "parent traversal",
+                ),
+                "missing placeholder": (
+                    ".native/skills/worker/SKILL.md",
+                    "exactly one '<skill>'",
+                ),
+                "duplicate placeholder": (
+                    ".native/<skill>/<skill>/SKILL.md",
+                    "exactly one '<skill>'",
+                ),
+                "wrong placeholder": (
+                    ".native/skills/<agent>/SKILL.md",
+                    "unsupported placeholder",
+                ),
+                "backslash": (
+                    r".native\skills\<skill>\SKILL.md",
+                    "backslash separators",
+                ),
+                "valid nested": (".native/nested/<skill>/SKILL.md", None),
+            },
+        }
+
+        for field, field_cases in cases.items():
+            for label, (replacement, expected_category) in field_cases.items():
+                with self.subTest(field=field, label=label):
+                    with tempfile.TemporaryDirectory() as temporary:
+                        catalog_root = Path(temporary) / "catalog"
+                        shutil.copytree(ROOT / "catalog", catalog_root)
+                        catalog_path = catalog_root / "catalog.json"
+                        catalog = json.loads(
+                            catalog_path.read_text(encoding="utf-8")
+                        )
+                        adapter = catalog["adapters"][0]
+                        if field == "agent_target":
+                            original = adapter[field]
+                            adapter[field] = replacement
+                        else:
+                            original = adapter[field][0]
+                            adapter[field][0] = replacement
+                        catalog_path.write_text(
+                            json.dumps(catalog), encoding="utf-8"
+                        )
+                        instructions_path = catalog_root / adapter["instructions"]
+                        instructions = instructions_path.read_text(encoding="utf-8")
+                        self.assertIn(original, instructions)
+                        instructions_path.write_text(
+                            instructions.replace(original, replacement, 1),
+                            encoding="utf-8",
+                        )
+
+                        errors = CHECK_CATALOG.validate_catalog(catalog_root)
+                        template_errors = [
+                            error
+                            for error in errors
+                            if f"adapter {adapter['name']!r} {field}" in error
+                        ]
+                        if expected_category is None:
+                            self.assertEqual([], template_errors, errors)
+                        else:
+                            self.assertTrue(
+                                any(
+                                    expected_category in error
+                                    for error in template_errors
+                                ),
+                                errors,
+                            )
 
     def test_frontmatter_accepts_the_managed_plain_format(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

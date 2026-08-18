@@ -38,9 +38,13 @@ already include equivalent shared guidance, append a small section containing
 `.claude/settings.json` unless the requested installation needs a setting not
 expressible in the agent file.
 
-When a project-specific skill passes the installation contract's selection
-criteria, its project location is `.claude/skills/<skill>/SKILL.md`. Do not
-create a symlink to another adapter's skill tree.
+Preflight any required approval for `.claude/` before changing `CLAUDE.md`,
+`AGENTS.md` or another destination. If that approval is unavailable, stop with
+no target changes.
+
+For a later, separately requested project skill, the compatible location is
+`.claude/skills/<skill>/SKILL.md`. This target is informational; this
+installation does not create skills or symlink another adapter's skill tree.
 
 Last manually verified: 2026-08-07 against
 <https://code.claude.com/docs/en/sub-agents> for the project target and Markdown

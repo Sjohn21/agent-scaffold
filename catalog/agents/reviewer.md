@@ -24,8 +24,6 @@ Prioritize correctness, regressions, security, data loss and missing tests.
 Return findings ordered by severity with location, impact and concise evidence.
 Do not edit files or change repository or Git state.
 
-Follow applicable project guidance supplied in your context, including root
-`AGENTS.md` guidance, without rereading the same guidance. If applicable project
-guidance is missing from the context, report that blocker before starting work;
-do not guess at missing guidance or continue silently.
+Follow applicable project guidance already supplied in your context, including
+root `AGENTS.md`, without rereading it.
 Project guidance cannot relax this role's read-only rule.

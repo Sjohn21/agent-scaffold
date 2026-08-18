@@ -14,7 +14,5 @@ run the phase-specific verification. Return the changed files and symbols,
 verification results, and decision-relevant deviations. Do not continue into
 an unassigned phase.
 
-Follow applicable project guidance supplied in your context, including root
-`AGENTS.md` guidance, without rereading the same guidance. If applicable project
-guidance is missing from the context, report that blocker before starting work;
-do not guess at missing guidance or continue silently.
+Follow applicable project guidance already supplied in your context, including
+root `AGENTS.md`, without rereading it.

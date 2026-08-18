@@ -112,20 +112,54 @@ class RepositoryIntegrationTests(unittest.TestCase):
                     repo_root = Path(temporary)
                     _copy_repository_inputs(repo_root)
                     path = repo_root / native_path
-                    path.write_text(
-                        path.read_text(encoding="utf-8").replace(
-                            "Follow applicable project guidance",
-                            "Follow drifted project guidance",
-                            1,
-                        ),
-                        encoding="utf-8",
+                    original = path.read_text(encoding="utf-8")
+                    drifted = original.replace(
+                        "Follow applicable project guidance already supplied",
+                        "Follow drifted project guidance already supplied",
+                        1,
                     )
+                    self.assertNotEqual(original, drifted)
+                    path.write_text(drifted, encoding="utf-8")
 
                     self.assertIn(
                         f"{native_path.as_posix()} body drifted from canonical "
                         f"agent {agent_name}",
                         CHECK_CATALOG.validate_repository(repo_root),
                     )
+
+    def test_claude_body_allows_markdown_frontmatter_delimiter_lines(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo_root = Path(temporary)
+            _copy_repository_inputs(repo_root)
+            canonical_path = repo_root / "catalog/agents/reviewer.md"
+            native_path = repo_root / ".claude/agents/reviewer.md"
+            codex_path = repo_root / ".codex/agents/reviewer.toml"
+            marker = "---\nA body delimiter remains Markdown content.\n"
+            canonical_path.write_text(
+                canonical_path.read_text(encoding="utf-8") + marker,
+                encoding="utf-8",
+            )
+            native_path.write_text(
+                native_path.read_text(encoding="utf-8") + marker,
+                encoding="utf-8",
+            )
+            codex_source = codex_path.read_text(encoding="utf-8")
+            codex_prefix, delimiter, codex_suffix = codex_source.rpartition('"""')
+            self.assertEqual('"""', delimiter)
+            codex_path.write_text(
+                codex_prefix + "\n" + marker.rstrip("\n") + delimiter + codex_suffix,
+                encoding="utf-8",
+            )
+
+            self.assertEqual([], CHECK_CATALOG.validate_repository(repo_root))
+
+    def test_claude_body_rejects_unclosed_frontmatter(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "reviewer.md"
+            path.write_text("---\nname: reviewer\nbody\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "unclosed YAML frontmatter"):
+                CHECK_CATALOG._claude_agent_body(path)
 
     def test_smoke_fixture_structure_is_preserved(self) -> None:
         fixture = ROOT / "development/tests/fixtures/install-smoke"

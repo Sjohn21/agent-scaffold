@@ -90,15 +90,20 @@ Check that:
   canonical body after frontmatter removal, with no added final newline, and
   the closing `"""` directly follows the final body character;
 - no other `.codex/agents/*.toml` or adapter directories were created;
+- no skill path was created or reported;
 - each native `model` field exactly matches the recorded chosen slug for its
   adapter-agent pair, while every chosen inheritance omits that field;
-- the native reviewer has `sandbox_mode = "read-only"`, follows project
-  guidance supplied in context without rereading it, and blocks before review
-  when applicable project guidance is demonstrably absent;
+- the native reviewer has `sandbox_mode = "read-only"` and follows project
+  guidance supplied in context without rereading it;
 - the native test-runner uses the smallest usable Codex sandbox and preserves
   the canonical command-only and no-production-edit boundary;
 - a read-only or protected `.codex/` destination is detected before `AGENTS.md`
-  or any other target file changes.
+  or any other target file changes;
+- an absolute, traversing or symlink-escaping resolved destination is rejected
+  before any target file changes;
+- with several optional metadata sources present, discovery stops once all
+  destinations, conflicts, writability, guidance facts and verification
+  evidence are resolved.
 
 Append a harmless line to the tracked fixture README and create a small,
 non-ignored untracked source or test file. Record `git status --short`, then
@@ -109,11 +114,6 @@ returns only review findings; does not ask for the diff to be pasted; does not
 read `AGENTS.md` again; and leaves `git status --short` unchanged. If an
 untracked file cannot reasonably be inspected, confirm the reviewer reports
 that limitation rather than silently omitting it.
-
-In a separate invocation where the client can demonstrate that applicable
-project guidance was not supplied to the native agent, confirm the reviewer
-reports a blocker before inspecting the diff. Do not simulate this by removing
-guidance that the adapter is documented to load.
 
 ## Claude scenario
 

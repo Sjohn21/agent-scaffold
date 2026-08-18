@@ -35,6 +35,8 @@ REPOSITORY_ONLY_INSTALL_REFERENCES = (
 CODEX_BODY_DELIMITER = '"""'
 CODEX_BODY_OPENING = f"developer_instructions = {CODEX_BODY_DELIMITER}\n"
 CODEX_BODY_CLOSING = CODEX_BODY_DELIMITER
+CATALOG_PLACEHOLDER = re.compile(r"<[^<>]+>")
+WINDOWS_DRIVE_PATH = re.compile(r"^[A-Za-z]:")
 
 
 def _valid_plain_description(value: str) -> bool:
@@ -70,6 +72,61 @@ def _safe_path(relative: str, catalog_root: Path) -> Path:
     except ValueError as error:
         raise ValueError(f"catalog path escapes catalog/: {relative!r}") from error
     return resolved
+
+
+def _valid_target_template(
+    value: object,
+    label: str,
+    required_placeholder: str | None,
+    errors: list[str],
+) -> bool:
+    if not isinstance(value, str) or not value:
+        errors.append(f"{label} must be a non-empty string: {value!r}")
+        return False
+
+    valid = True
+    if "\\" in value:
+        errors.append(f"{label} uses ambiguous backslash separators: {value!r}")
+        valid = False
+    if value.startswith("/") or WINDOWS_DRIVE_PATH.match(value):
+        errors.append(f"{label} must be repository-relative, not absolute: {value!r}")
+        valid = False
+
+    segments = value.split("/")
+    if "" in segments:
+        errors.append(f"{label} contains an empty path segment: {value!r}")
+        valid = False
+    if "." in segments:
+        errors.append(f"{label} contains a current-directory segment: {value!r}")
+        valid = False
+    if ".." in segments:
+        errors.append(f"{label} contains parent traversal: {value!r}")
+        valid = False
+
+    placeholders = CATALOG_PLACEHOLDER.findall(value)
+    without_placeholders = CATALOG_PLACEHOLDER.sub("", value)
+    if "<" in without_placeholders or ">" in without_placeholders:
+        errors.append(f"{label} contains a malformed placeholder: {value!r}")
+        valid = False
+    if required_placeholder is None:
+        if placeholders:
+            errors.append(f"{label} must not contain placeholders: {value!r}")
+            valid = False
+    else:
+        if placeholders.count(required_placeholder) != 1:
+            errors.append(
+                f"{label} must contain exactly one {required_placeholder!r} "
+                f"placeholder: {value!r}"
+            )
+            valid = False
+        unexpected = sorted(set(placeholders).difference({required_placeholder}))
+        if unexpected:
+            errors.append(
+                f"{label} contains unsupported placeholder(s): "
+                + ", ".join(unexpected)
+            )
+            valid = False
+    return valid
 
 
 def _frontmatter(
@@ -127,12 +184,17 @@ def _frontmatter(
 
 def _claude_agent_body(path: Path) -> str:
     lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
-    delimiters = [
-        index for index, line in enumerate(lines) if line.rstrip("\r\n") == "---"
-    ]
-    if len(delimiters) != 2 or delimiters[0] != 0:
-        raise ValueError("must contain exactly one bounded YAML frontmatter block")
-    return "".join(lines[delimiters[1] + 1 :]).strip()
+    if not lines or lines[0].rstrip("\r\n") != "---":
+        raise ValueError("must start with a YAML frontmatter block")
+    try:
+        end = next(
+            index
+            for index, line in enumerate(lines[1:], start=1)
+            if line.rstrip("\r\n") == "---"
+        )
+    except StopIteration as error:
+        raise ValueError("has an unclosed YAML frontmatter block") from error
+    return "".join(lines[end + 1 :]).strip()
 
 
 def _canonical_body_source(path: Path) -> str:
@@ -293,14 +355,15 @@ def validate_catalog(catalog_root: Path) -> list[str]:
             if accepted_name is not None:
                 adapter_names.append(accepted_name)
             documented_targets: list[str] = []
-            if not isinstance(target, str) or "<agent>" not in target:
-                errors.append(
-                    f"adapter {name!r} agent_target must be a string containing "
-                    f"'<agent>': {target!r}"
-                )
-            else:
+            if isinstance(target, str) and target:
                 targets.append(target)
                 documented_targets.append(target)
+            _valid_target_template(
+                target,
+                f"adapter {name!r} agent_target",
+                "<agent>",
+                errors,
+            )
             for field in ("instruction_targets", "skill_targets"):
                 values = item[field]
                 if not isinstance(values, list) or not values or not all(
@@ -314,6 +377,16 @@ def validate_catalog(catalog_root: Path) -> list[str]:
                 if len(values) != len(set(values)):
                     errors.append(f"adapter {name} has duplicate {field}")
                 documented_targets.extend(values)
+                required_placeholder = (
+                    None if field == "instruction_targets" else "<skill>"
+                )
+                for value in values:
+                    _valid_target_template(
+                        value,
+                        f"adapter {name!r} {field} entry",
+                        required_placeholder,
+                        errors,
+                    )
             accepted_instructions = _accepted_path(
                 item["instructions"], "adapter instructions", errors
             )

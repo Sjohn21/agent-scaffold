@@ -34,11 +34,12 @@ needed.
 Preserve all existing files below `.github/`, especially workflows,
 instructions and unrelated custom agents.
 
-When a project-specific skill passes the installation contract's selection
-criteria, prefer `.github/skills/<skill>/SKILL.md` for Copilot alone. Copilot
-also discovers `.agents/skills/<skill>/SKILL.md` and
-`.claude/skills/<skill>/SKILL.md`, so one of those can be a deliberate shared
-native location when another selected adapter supports it.
+For a later, separately requested project skill, the compatible targets are
+`.github/skills/<skill>/SKILL.md`, `.agents/skills/<skill>/SKILL.md` and
+`.claude/skills/<skill>/SKILL.md`. This metadata is informational; this
+installation does not create skills. The first target is Copilot-specific; the
+other two can be deliberate shared native locations when another client
+supports them.
 
 Last manually verified: 2026-08-07 against the official custom-agent
 <https://docs.github.com/en/copilot/reference/custom-agents-configuration>
