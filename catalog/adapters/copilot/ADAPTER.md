@@ -40,15 +40,3 @@ For a later, separately requested project skill, the compatible targets are
 installation does not create skills. The first target is Copilot-specific; the
 other two can be deliberate shared native locations when another client
 supports them.
-
-Last manually verified: 2026-08-07 against the official custom-agent
-<https://docs.github.com/en/copilot/reference/custom-agents-configuration>
-format reference and
-<https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli>
-project-target guide.
-
-References:
-
-- <https://docs.github.com/en/copilot/reference/custom-agents-configuration>
-- <https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli>
-- <https://docs.github.com/en/copilot/concepts/agents/about-agent-skills>

@@ -13,7 +13,7 @@ tooling, and technically required native entrypoints:
 | --- | --- | --- |
 | Catalog | `catalog/` | Complete, independently copyable distribution |
 | Dogfood | `.codex/agents/`, `.claude/agents/` | Small native selection used by this repository |
-| Development | `development/` | Offline validator, tests, fixtures, and manual smoke guidance |
+| Development | `development/` | Offline validator, tests, fixtures, manual smoke guidance, and compatibility evidence |
 | Native integration | Root instructions and `.github/workflows/` | Client- and platform-discovered entrypoints |
 
 Only `catalog/` is installed or copied into target repositories. Files in the
@@ -55,6 +55,9 @@ entrypoint:
   parity;
 - direct CLI execution runs both and reports all errors together.
 
+`development/references/adapter-compatibility.md` is the manual register of
+official sources, checked dates, and supported adapter behavior surfaces.
+
 Tests are split by the same boundary:
 
 - `development/tests/test_catalog_contract.py` tests catalog content and an
@@ -71,9 +74,11 @@ adapter, agent, plan, or repository documentation. Review prose changes
 normally. When prose changes installation or runtime behavior, run and record
 the applicable manual smoke scenarios so the rendered native configuration and
 delegated behavior are checked rather than inferred from phrases.
-Adapter compatibility is checked manually against the official sources listed
-in each `ADAPTER.md` and with the
-[installation smoke runbook](development/tests/smoke/README.md).
+Adapter compatibility is checked manually against the official sources in the
+[compatibility register](development/references/adapter-compatibility.md) and
+with the [installation smoke runbook](development/tests/smoke/README.md). The
+register is maintainer evidence, not a catalog dependency; CI performs no
+online compatibility checks.
 
 ### Native entrypoints
 

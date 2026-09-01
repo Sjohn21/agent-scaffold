@@ -11,7 +11,8 @@
 - Read-only agents may use shell inspection but receive no native file-edit
   tools. A general shell is not command-level or filesystem-read-only isolation.
 - Keep CI offline. Adapter compatibility is manually checked against the
-  official sources recorded in each `ADAPTER.md`.
+  official sources recorded in
+  `development/references/adapter-compatibility.md`.
 - Keep `catalog/` the complete distribution boundary; development tooling and
   native dogfood must not become catalog dependencies.
 

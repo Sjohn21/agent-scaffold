@@ -60,14 +60,3 @@ guidance before work begins.
 For a later, separately requested project skill, the compatible repository
 location is `.agents/skills/<skill>/SKILL.md`. This target is informational;
 this installation does not create skills.
-
-Last manually verified: 2026-08-12 against
-<https://learn.chatgpt.com/docs/agent-configuration/subagents> for the project
-target and documented triple double-quoted TOML agent format. The catalog's
-narrower unchanged-body restrictions follow TOML 1.0 basic-string semantics.
-
-References:
-
-- <https://learn.chatgpt.com/docs/agent-configuration/subagents>
-- <https://learn.chatgpt.com/docs/build-skills>
-- <https://toml.io/en/v1.0.0#string>

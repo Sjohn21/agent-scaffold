@@ -45,12 +45,3 @@ no target changes.
 For a later, separately requested project skill, the compatible location is
 `.claude/skills/<skill>/SKILL.md`. This target is informational; this
 installation does not create skills or symlink another adapter's skill tree.
-
-Last manually verified: 2026-09-01 against
-<https://code.claude.com/docs/en/sub-agents> for the project target and Markdown
-frontmatter format, model inheritance and precedence.
-
-References:
-
-- <https://code.claude.com/docs/en/sub-agents>
-- <https://code.claude.com/docs/en/skills>

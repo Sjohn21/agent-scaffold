@@ -46,13 +46,3 @@ For a later, separately requested project skill, the compatible targets are
 metadata is informational; this installation does not create skills. The first
 target is Gemini-specific; the second can be a deliberate shared native
 location with Codex or Copilot. Do not use a symlink between locations.
-
-Last manually verified: 2026-08-07 against
-<https://geminicli.com/docs/core/subagents/> for the project target and Markdown
-frontmatter format.
-
-References:
-
-- <https://geminicli.com/docs/core/subagents/>
-- <https://geminicli.com/docs/reference/tools-api/>
-- <https://geminicli.com/docs/cli/using-agent-skills/>
