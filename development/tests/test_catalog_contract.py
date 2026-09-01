@@ -30,6 +30,31 @@ class CatalogContractTests(unittest.TestCase):
             self.assertFalse((Path(temporary) / ".codex").exists())
             self.assertFalse((Path(temporary) / ".claude").exists())
 
+    def test_malformed_utf8_returns_catalog_validation_errors(self) -> None:
+        cases = {
+            "catalog manifest": (
+                "catalog.json",
+                "invalid catalog/catalog.json:",
+            ),
+            "catalog document": ("INSTALL.md", "utf-8"),
+        }
+        for label, (relative, expected_category) in cases.items():
+            with self.subTest(label=label):
+                with tempfile.TemporaryDirectory() as temporary:
+                    catalog_root = Path(temporary) / "catalog"
+                    shutil.copytree(ROOT / "catalog", catalog_root)
+                    (catalog_root / relative).write_bytes(b"\xff\n")
+
+                    errors = CHECK_CATALOG.validate_catalog(catalog_root)
+
+                    self.assertTrue(
+                        any(
+                            expected_category.lower() in error.lower()
+                            for error in errors
+                        ),
+                        errors,
+                    )
+
     def test_isolated_catalog_requires_a_license(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             isolated_catalog = Path(temporary) / "catalog"

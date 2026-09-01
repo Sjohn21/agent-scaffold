@@ -30,6 +30,47 @@ class RepositoryIntegrationTests(unittest.TestCase):
     def test_repository_integration_is_valid(self) -> None:
         self.assertEqual([], CHECK_CATALOG.validate_repository(ROOT))
 
+    def test_repository_validation_reports_unloadable_manifest_as_skipped(
+        self,
+    ) -> None:
+        cases = {
+            "missing": None,
+            "malformed JSON": b"{not JSON}\n",
+            "malformed UTF-8": b"\xff\n",
+            "non-object": b"[]\n",
+        }
+        for label, content in cases.items():
+            with self.subTest(label=label):
+                with tempfile.TemporaryDirectory() as temporary:
+                    repo_root = Path(temporary)
+                    _copy_repository_inputs(repo_root)
+                    catalog_path = repo_root / "catalog/catalog.json"
+                    if content is None:
+                        catalog_path.unlink()
+                    else:
+                        catalog_path.write_bytes(content)
+
+                    self.assertEqual(
+                        [CHECK_CATALOG.REPOSITORY_VALIDATION_SKIPPED],
+                        CHECK_CATALOG.validate_repository(repo_root),
+                    )
+
+    def test_invalid_utf8_readme_reports_error_and_continues(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo_root = Path(temporary)
+            _copy_repository_inputs(repo_root)
+            (repo_root / "README.md").write_bytes(b"\xff\n")
+
+            errors = CHECK_CATALOG.validate_repository(repo_root)
+
+            self.assertTrue(
+                any("utf-8" in error.lower() for error in errors), errors
+            )
+            self.assertNotIn(
+                CHECK_CATALOG.REPOSITORY_VALIDATION_SKIPPED, errors
+            )
+            self.assertIn("README does not document agent reviewer", errors)
+
     def test_repository_license_must_match_catalog_license(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo_root = Path(temporary)

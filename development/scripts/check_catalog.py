@@ -37,6 +37,10 @@ CODEX_BODY_OPENING = f"developer_instructions = {CODEX_BODY_DELIMITER}\n"
 CODEX_BODY_CLOSING = CODEX_BODY_DELIMITER
 CATALOG_PLACEHOLDER = re.compile(r"<[^<>]+>")
 WINDOWS_DRIVE_PATH = re.compile(r"^[A-Za-z]:")
+REPOSITORY_VALIDATION_SKIPPED = (
+    "repository validation skipped: catalog/catalog.json could not be loaded "
+    "as an object"
+)
 
 
 def _valid_plain_description(value: str) -> bool:
@@ -275,7 +279,7 @@ def validate_catalog(catalog_root: Path) -> list[str]:
             errors.append("missing catalog/LICENSE")
         try:
             catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as error:
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
             return [f"invalid catalog/catalog.json: {error}"]
 
         if not isinstance(catalog, dict):
@@ -502,7 +506,7 @@ def validate_catalog(catalog_root: Path) -> list[str]:
                     + ", ".join(f"catalog/{path}" for path in uncataloged_paths)
                 )
         return errors
-    except OSError as error:
+    except (OSError, UnicodeDecodeError) as error:
         errors.append(str(error))
         return errors
 
@@ -515,10 +519,10 @@ def validate_repository(repo_root: Path) -> list[str]:
 
     try:
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return errors
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return [REPOSITORY_VALIDATION_SKIPPED]
     if not isinstance(catalog, dict):
-        return errors
+        return [REPOSITORY_VALIDATION_SKIPPED]
 
     license_path = repo_root / "LICENSE"
     catalog_license_path = catalog_root / "LICENSE"
@@ -536,7 +540,7 @@ def validate_repository(repo_root: Path) -> list[str]:
         readme = (
             readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
         )
-    except OSError as error:
+    except (OSError, UnicodeDecodeError) as error:
         errors.append(str(error))
         readme = ""
 

@@ -119,12 +119,13 @@ that limitation rather than silently omitting it.
 
 Prepare a fresh target copy and request only the Claude adapter with
 `reviewer`, explicitly choosing model inheritance in the initial prompt. Check
-that root `CLAUDE.md` imports `@AGENTS.md`, the native tools
-are exactly `Read, Grep, Glob, Bash`, and neither `model` nor `permissionMode`
-is present. Run the same working-tree review and confirm the agent uses
-`git diff` without an extra `AGENTS.md` read or any file mutation. If
-`.claude/` needs approval, confirm the agent requests it before changing
-`CLAUDE.md` or `AGENTS.md`.
+that root `CLAUDE.md` imports `@AGENTS.md`, the native tools are exactly `Read,
+Grep, Glob, Bash`, `model: inherit` is present, and `permissionMode` is absent.
+Confirm the agent file loads natively. Run the same working-tree review and
+confirm the agent uses `git diff` without an extra `AGENTS.md` read or any file
+mutation. This verifies the persisted inheritance choice; it does not prevent a
+later explicit per-invocation model override. If `.claude/` needs approval,
+confirm the agent requests it before changing `CLAUDE.md` or `AGENTS.md`.
 
 ## Copilot and Gemini scenarios
 

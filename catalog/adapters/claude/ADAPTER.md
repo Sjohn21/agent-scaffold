@@ -28,7 +28,7 @@ as `plan-implementer` may additionally receive `Edit` and `Write`. Preserve
 stricter existing project permissions.
 
 Translate the model choice already resolved by the installation contract. For
-explicit inheritance, omit `model`; for an exact model, add
+explicit inheritance, add `model: inherit`; for an exact model, add
 `model: <resolved model>` only to that adapter-agent pair.
 
 Claude subagents load project `CLAUDE.md` instructions. Ensure shared guidance
@@ -46,9 +46,9 @@ For a later, separately requested project skill, the compatible location is
 `.claude/skills/<skill>/SKILL.md`. This target is informational; this
 installation does not create skills or symlink another adapter's skill tree.
 
-Last manually verified: 2026-08-07 against
+Last manually verified: 2026-09-01 against
 <https://code.claude.com/docs/en/sub-agents> for the project target and Markdown
-frontmatter format.
+frontmatter format, model inheritance and precedence.
 
 References:
 

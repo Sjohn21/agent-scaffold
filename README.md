@@ -116,7 +116,7 @@ project guidance. Selecting an adapter never implicitly selects another one.
 | `test-runner` | Long or noisy checks with a compact result | [test-runner](catalog/agents/test-runner.md) |
 | `plan-search` | Broad read-only inventory for one plan phase | [plan-search](catalog/agents/plan-search.md) |
 | `plan-implementer` | Implementing one approved plan phase | [plan-implementer](catalog/agents/plan-implementer.md) |
-| `plan-committer` | One explicitly requested, path-bounded commit | [plan-committer](catalog/agents/plan-committer.md) |
+| `plan-committer` | An exact, already verified commit within a plan workflow; not for routine commits | [plan-committer](catalog/agents/plan-committer.md) |
 
 Use `all` as the complete agent selection when you want every cataloged agent.
 Do not combine `all` with individual agent names. The optional

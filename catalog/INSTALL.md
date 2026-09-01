@@ -110,10 +110,10 @@ Read each selected `ADAPTER.md` and canonical agent completely. Translate only
 selected pairs to their exact native targets. Preserve name, description, full
 behaviour, write boundary and the canonical statement that project guidance
 cannot weaken read-only safety. Use least privilege and the adapter's documented
-shell caveat; do not claim stronger isolation. Explicit inheritance omits the
-native model field; an exact model is applied only to its named adapter-agent
-pair. Preserve unrelated native configuration and do not copy canonical
-sources, renderers or overlays.
+shell caveat; do not claim stronger isolation. Encode explicit inheritance
+exactly as the selected adapter's `ADAPTER.md` specifies; apply an exact model
+only to its named adapter-agent pair. Preserve unrelated native configuration
+and do not copy canonical sources, renderers or overlays.
 
 Install `plan-examples` only when selected, at `.agents/plans/_template/`. The
 target owns the examples. Never invent an active plan name.
