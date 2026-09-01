@@ -20,6 +20,7 @@ practical first setup is your client's adapter with `reviewer` and
 - [Choose what to install](#choose-what-to-install)
 - [More copy-paste installation recipes](#more-copy-paste-installation-recipes)
 - [One-off catalog copy](#one-off-catalog-copy)
+- [Author a project skill](#author-a-project-skill)
 - [What installation does](#what-installation-does)
 - [Use and maintain installed agents](#use-and-maintain-installed-agents)
 - [Development](#development)
@@ -255,6 +256,59 @@ Open the target repository in your coding client and use this prompt:
 The installation agent may remove only that exact temporary copy, only after
 successful validation, and only because the prompt explicitly requests it. It
 must never remove a sibling checkout or another source path.
+
+## Author a project skill
+
+Skills authoring is a separate, explicit operation from agent installation:
+[catalog/SKILLS.md](catalog/SKILLS.md) governs it, and each run authors at
+most one new skill. Installation never creates skills, and a staged catalog
+that an earlier installation cleaned up is gone; make the catalog available
+again first, either as a readable sibling checkout or by staging a fresh copy
+with the [one-off catalog copy](#one-off-catalog-copy) recipe above.
+
+With a staged copy at the target's `.agent-scaffold/`, open the target in the
+client you want the skill for and send a complete request like:
+
+> Read `.agent-scaffold/SKILLS.md` and author one new project skill for the
+> Codex client only. The skill should walk through our release checklist in
+> `docs/releasing.md`. Positive trigger examples: "prepare the next release"
+> and "walk me through cutting a release". Preserve all existing files, stop
+> before writing if the selected clients share no skill location or a
+> same-name skill already exists anywhere, and after successful validation
+> remove only this target's exact `.agent-scaffold` directory.
+
+Name every client that should discover the skill, give two representative
+trigger prompts, and point at any project files the skill needs. The
+authoring agent reads the ordered `skill_targets` from the staged
+`catalog.json`, writes to exactly one common native location, and stops
+before writing when the selected clients share none. Codex + Claude is
+currently such a combination: Codex discovers repository skills only under
+`.agents/skills/` and Claude Code only under `.claude/skills/`, so that
+selection reports both target lists and asks you to narrow it.
+
+You can deliberately run authoring twice for disjoint selections — for
+example once for Codex and once for Claude. The results are independent,
+target-owned copies with no synchronization; you maintain both, and a third
+client such as Copilot may discover both locations and apply its own native
+precedence.
+
+### Ask for skill recommendations
+
+A separate read-only request proposes at most three evidence-backed skill
+candidates from the repository without writing anything. Prefer a readable
+sibling checkout for this, so the target stays untouched:
+
+> Read `/absolute/path/to/agent-scaffold/catalog/SKILLS.md` and recommend at
+> most three skill candidates for this repository, backed by exact repository
+> evidence paths. Make no changes to this project's content.
+
+If you stage the catalog for this instead, you may add: "after the
+recommendation report succeeds, remove only this target's exact
+`.agent-scaffold` directory." But when you expect to pick a candidate and
+author it next, keep the staged catalog or use a sibling source — a cleaned
+staging copy is not persistent, and the later authoring run would have to
+stage the catalog again. Recommendations never turn into authoring in the
+same run: pick one candidate and send a new explicit authoring request.
 
 ## What installation does
 

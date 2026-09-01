@@ -119,7 +119,11 @@ Install `plan-examples` only when selected, at `.agents/plans/_template/`. The
 target owns the examples. Never invent an active plan name.
 
 This installation creates no skills. A later, separate user request must
-explicitly ask for any project-skill work.
+explicitly ask for any project-skill work, which `SKILLS.md` in this catalog
+governs. Because installation may remove its exact staged catalog copy after
+successful validation, a later skill request cannot assume this catalog is
+still present at that path; it must make the catalog available again — staged
+or as a readable sibling — and resolve its own source lifecycle.
 
 ## 5. Validate, report and clean up
 

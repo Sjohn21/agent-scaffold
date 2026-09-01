@@ -28,10 +28,11 @@ DOGFOOD_AGENTS = {
     Path(".codex/agents/plan-search.toml"): ("codex", "plan-search"),
     Path(".codex/agents/reviewer.toml"): ("codex", "reviewer"),
 }
-REPOSITORY_ONLY_INSTALL_REFERENCES = (
+REPOSITORY_ONLY_CONTRACT_REFERENCES = (
     "../",
     "development/",
 )
+STANDALONE_CONTRACTS = ("INSTALL.md", "SKILLS.md")
 CODEX_BODY_DELIMITER = '"""'
 CODEX_BODY_OPENING = f"developer_instructions = {CODEX_BODY_DELIMITER}\n"
 CODEX_BODY_CLOSING = CODEX_BODY_DELIMITER
@@ -261,19 +262,24 @@ def validate_catalog(catalog_root: Path) -> list[str]:
     errors: list[str] = []
     try:
         catalog_path = catalog_root / "catalog.json"
-        install_path = catalog_root / "INSTALL.md"
         license_path = catalog_root / "LICENSE"
         if not catalog_path.is_file():
             return ["missing catalog/catalog.json"]
-        if not install_path.is_file():
-            errors.append("missing catalog/INSTALL.md")
-        else:
-            install_contract = install_path.read_text(encoding="utf-8")
-            for reference in REPOSITORY_ONLY_INSTALL_REFERENCES:
-                if reference in install_contract:
+        for contract_name in STANDALONE_CONTRACTS:
+            contract_path = catalog_root / contract_name
+            if not contract_path.is_file():
+                errors.append(f"missing catalog/{contract_name}")
+                continue
+            try:
+                contract = contract_path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError) as error:
+                errors.append(f"invalid catalog/{contract_name}: {error}")
+                continue
+            for reference in REPOSITORY_ONLY_CONTRACT_REFERENCES:
+                if reference in contract:
                     errors.append(
-                        "catalog/INSTALL.md references repository-only path: "
-                        f"{reference}"
+                        f"catalog/{contract_name} references repository-only "
+                        f"path: {reference}"
                     )
         if not license_path.is_file():
             errors.append("missing catalog/LICENSE")
@@ -359,6 +365,7 @@ def validate_catalog(catalog_root: Path) -> list[str]:
             if accepted_name is not None:
                 adapter_names.append(accepted_name)
             documented_targets: list[str] = []
+            ordered_skill_targets: list[str] = []
             if isinstance(target, str) and target:
                 targets.append(target)
                 documented_targets.append(target)
@@ -381,6 +388,8 @@ def validate_catalog(catalog_root: Path) -> list[str]:
                 if len(values) != len(set(values)):
                     errors.append(f"adapter {name} has duplicate {field}")
                 documented_targets.extend(values)
+                if field == "skill_targets":
+                    ordered_skill_targets = values
                 required_placeholder = (
                     None if field == "instruction_targets" else "<skill>"
                 )
@@ -412,6 +421,16 @@ def validate_catalog(catalog_root: Path) -> list[str]:
                             f"adapter {name} instructions do not name target "
                             f"{documented_target}"
                         )
+                first_occurrences = [
+                    instructions.find(value) for value in ordered_skill_targets
+                ]
+                if -1 not in first_occurrences and first_occurrences != sorted(
+                    first_occurrences
+                ):
+                    errors.append(
+                        f"adapter {name} instructions document skill targets "
+                        "out of manifest order"
+                    )
                 if accepted_name is not None:
                     for agent_name in sorted(write_capable_names):
                         if agent_name not in instructions:
@@ -578,6 +597,9 @@ def validate_repository(repo_root: Path) -> list[str]:
                 f"README documents uncataloged {label}s: "
                 + ", ".join(unknown_paths)
             )
+
+    if "](catalog/SKILLS.md)" not in readme:
+        errors.append("README does not document the skills authoring contract")
 
     components = catalog.get("optional_components", [])
     if isinstance(components, list):

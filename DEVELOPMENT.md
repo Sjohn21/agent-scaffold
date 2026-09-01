@@ -33,6 +33,40 @@ selection-driven: do not add an installer, renderer, target-side helper,
 managed state, ownership markers, updater, or compatibility copy of an old
 source path.
 
+#### Skills authoring
+
+`catalog/SKILLS.md` is the standalone prompt contract for one-skill authoring
+(Route A) and read-only repository skill recommendations (Route B). Its rules:
+
+- Each adapter's `skill_targets` list in `catalog.json` is ordered: the first
+  entry is that adapter's native preference, later entries are compatible
+  alternatives. `SKILLS.md` reads the manifest instead of embedding a target
+  table, and multi-adapter authoring uses the best common entry or stops on an
+  empty intersection. Target metadata may change whenever official
+  compatibility changes; every documented root must have dated primary-source
+  evidence in the compatibility register, and a change updates `catalog.json`,
+  the adapter guidance, tests, and smoke scope together.
+- The catalog source is either the target's exact staged `.agent-scaffold/`
+  copy or an external (sibling) checkout. Only the exact staged copy is ever
+  removable, and `SKILLS.md` removes it only on an explicit user request after
+  a successful authoring run, a fully validated chosen-destination no-op, or a
+  successful Route B report. This is deliberately stricter than `INSTALL.md`,
+  which cleans its exact staged source automatically after successful
+  installation validation: a recommendation or no-op outcome is often followed
+  immediately by more catalog work, so the staged source is a plausible
+  next-step input rather than installation debris. Client-specific read-access
+  caveats for an external catalog live in the adapter documents, not in the
+  neutral contract.
+- Route B is read-only and evidence-backed: at most three candidates, each
+  grounded in exact repository paths, and never a transition into authoring in
+  the same run.
+- Offline validation covers only repository-owned artifacts: the `SKILLS.md`
+  distribution boundary and the safety and adapter-document ordering of
+  `skill_targets`. Do not add a generated-skill validator, target-side helper,
+  or fixture implementation for hypothetical authored output; native smoke in
+  `development/tests/smoke/README.md` owns all claims about produced skills,
+  discovery, and trigger behavior.
+
 ### Dogfood
 
 The followed files under `.codex/agents/` and `.claude/agents/` are native

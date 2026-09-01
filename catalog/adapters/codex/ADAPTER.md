@@ -57,6 +57,17 @@ Shared project instructions stay in root `AGENTS.md`; do not duplicate them in
 `.codex/config.toml` or in every agent. Codex loads applicable `AGENTS.md`
 guidance before work begins.
 
-For a later, separately requested project skill, the compatible repository
-location is `.agents/skills/<skill>/SKILL.md`. This target is informational;
-this installation does not create skills.
+For a separately requested project skill governed by `SKILLS.md`, the
+compatible repository location is `.agents/skills/<skill>/SKILL.md`; Codex
+documents no other repository skill root. This installation does not create
+skills. Codex scans `.agents/skills/` in every directory from the working
+directory up to the repository root, alongside user, admin, and system
+locations with no documented precedence between those scopes, and does not
+merge same-name
+skills: both can appear in skill selectors. Preflight must therefore treat any
+same-name definition as significant, including one in an intermediate
+directory between the working directory and the repository root. Reading a catalog outside the
+working directory is subject to the active sandbox and live permission
+precedence; obtain the required approval before inventory. Verify natively
+with `/skills` listing and a `$`-mention explicit invocation; Codex detects
+skill changes automatically, with a client restart as the fallback.

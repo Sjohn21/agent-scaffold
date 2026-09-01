@@ -37,6 +37,7 @@ class CatalogContractTests(unittest.TestCase):
                 "invalid catalog/catalog.json:",
             ),
             "catalog document": ("INSTALL.md", "utf-8"),
+            "skills document": ("SKILLS.md", "utf-8"),
         }
         for label, (relative, expected_category) in cases.items():
             with self.subTest(label=label):
@@ -101,6 +102,92 @@ class CatalogContractTests(unittest.TestCase):
 
             self.assertEqual(
                 [], CHECK_CATALOG.validate_catalog(isolated_catalog)
+            )
+
+    def test_isolated_catalog_requires_the_skills_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            isolated_catalog = Path(temporary) / "catalog"
+            shutil.copytree(ROOT / "catalog", isolated_catalog)
+            (isolated_catalog / "SKILLS.md").unlink()
+
+            self.assertIn(
+                "missing catalog/SKILLS.md",
+                CHECK_CATALOG.validate_catalog(isolated_catalog),
+            )
+
+    def test_skills_contract_rejects_repository_only_dependencies(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            isolated_catalog = Path(temporary) / "catalog"
+            shutil.copytree(ROOT / "catalog", isolated_catalog)
+            skills_path = isolated_catalog / "SKILLS.md"
+            skills_path.write_text(
+                skills_path.read_text(encoding="utf-8")
+                + "\nRead ../development/references/adapter-compatibility.md "
+                "before authoring.\n",
+                encoding="utf-8",
+            )
+
+            errors = CHECK_CATALOG.validate_catalog(isolated_catalog)
+
+            self.assertIn(
+                "catalog/SKILLS.md references repository-only path: ../", errors
+            )
+            self.assertIn(
+                "catalog/SKILLS.md references repository-only path: development/",
+                errors,
+            )
+
+    def test_skills_contract_allows_native_target_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            isolated_catalog = Path(temporary) / "catalog"
+            shutil.copytree(ROOT / "catalog", isolated_catalog)
+            skills_path = isolated_catalog / "SKILLS.md"
+            skills_path.write_text(
+                skills_path.read_text(encoding="utf-8")
+                + "\nAn example destination is "
+                "`.agents/skills/release-checklist/SKILL.md`.\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [], CHECK_CATALOG.validate_catalog(isolated_catalog)
+            )
+
+    def test_adapter_skill_targets_must_appear_in_manifest_order(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            catalog_root = Path(temporary) / "catalog"
+            shutil.copytree(ROOT / "catalog", catalog_root)
+            path = catalog_root / "adapters/copilot/ADAPTER.md"
+            instructions = path.read_text(encoding="utf-8")
+            self.assertIn(".claude/skills/<skill>/SKILL.md", instructions)
+            path.write_text(
+                "An early mention of `.claude/skills/<skill>/SKILL.md` breaks "
+                "the declared preference order.\n\n" + instructions,
+                encoding="utf-8",
+            )
+
+            self.assertIn(
+                "adapter copilot instructions document skill targets out of "
+                "manifest order",
+                CHECK_CATALOG.validate_catalog(catalog_root),
+            )
+
+    def test_adapter_may_repeat_a_skill_target_after_the_ordered_run(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            catalog_root = Path(temporary) / "catalog"
+            shutil.copytree(ROOT / "catalog", catalog_root)
+            path = catalog_root / "adapters/copilot/ADAPTER.md"
+            path.write_text(
+                path.read_text(encoding="utf-8")
+                + "\nA later example may repeat "
+                "`.github/skills/<skill>/SKILL.md` without pinning prose.\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [], CHECK_CATALOG.validate_catalog(catalog_root)
             )
 
     def test_duplicate_agent_is_rejected(self) -> None:

@@ -126,6 +126,26 @@ class RepositoryIntegrationTests(unittest.TestCase):
                 [], CHECK_CATALOG.validate_catalog(repo_root / "catalog")
             )
 
+    def test_readme_must_link_the_skills_authoring_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo_root = Path(temporary)
+            _copy_repository_inputs(repo_root)
+            readme_path = repo_root / "README.md"
+            readme_path.write_text(
+                readme_path.read_text(encoding="utf-8").replace(
+                    "](catalog/SKILLS.md)", "]"
+                ),
+                encoding="utf-8",
+            )
+
+            self.assertIn(
+                "README does not document the skills authoring contract",
+                CHECK_CATALOG.validate_repository(repo_root),
+            )
+            self.assertEqual(
+                [], CHECK_CATALOG.validate_catalog(repo_root / "catalog")
+            )
+
     def test_missing_canonical_agent_only_fails_catalog_contract(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo_root = Path(temporary)

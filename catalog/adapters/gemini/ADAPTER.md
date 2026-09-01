@@ -41,8 +41,15 @@ reachable without replacing existing content: when root `GEMINI.md` does not
 already include equivalent shared guidance, append a small section containing
 `@./AGENTS.md`. Preserve every existing instruction and setting.
 
-For a later, separately requested project skill, the compatible targets are
-`.gemini/skills/<skill>/SKILL.md` and `.agents/skills/<skill>/SKILL.md`. This
-metadata is informational; this installation does not create skills. The first
-target is Gemini-specific; the second can be a deliberate shared native
-location with Codex or Copilot. Do not use a symlink between locations.
+For a separately requested project skill governed by `SKILLS.md`, the
+compatible targets in preference order are `.gemini/skills/<skill>/SKILL.md`
+and `.agents/skills/<skill>/SKILL.md`, a documented alias of the workspace
+root. This installation does not create skills. The first target is
+Gemini-specific; the second can be a deliberate shared native location with
+Codex or Copilot. Do not use a symlink between locations. A workspace skill
+overrides a same-name user, extension, or built-in skill, so report shadowing
+in that direction rather than claiming repository inspection settles it.
+Reading a catalog outside the workspace needs the standard workspace-boundary
+approval. Verify natively with `/skills list`, `/skills reload` after adding
+a skill mid-session, and an explicit invocation; each in-session activation
+asks for permission, which is expected trigger evidence, not a failure.

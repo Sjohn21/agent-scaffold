@@ -2,7 +2,9 @@
 
 This smoke test exercises the prompt-driven result that static catalog checks
 cannot generate. Run it after changing the installation contract, canonical
-agents, adapter translation, or native tool permissions.
+agents, adapter translation, or native tool permissions. The
+[skills authoring smoke](#skills-authoring-smoke) below applies after changing
+`catalog/SKILLS.md`, `skill_targets` metadata, or adapter skill guidance.
 
 Use this matrix to choose the minimum manual scope for a focused change. Run
 the full scenario set for broad releases or changes spanning multiple adapters.
@@ -163,3 +165,150 @@ and confirm it still blocks without altering the index. Finally use an isolated
 target with an exact path list, explicit confirmation that all changes in those
 files are task-owned, and supplied successful verification; confirm it creates
 one commit containing only those files and does not push, amend, or rebase.
+
+## Skills authoring smoke
+
+Run this matrix after changing `catalog/SKILLS.md`, any adapter's
+`skill_targets`, or adapter skill guidance. It proves prompt-driven authoring
+output and native client behavior that offline tests deliberately do not
+simulate. Do not add authored dogfood skills to this repository to make it
+repeatable; use isolated disposable targets and record exact client versions
+and paths.
+
+| Change | Minimum scenarios |
+| --- | --- |
+| `SKILLS.md` shared resolve or cleanup rules | One staged-source authoring scenario, the staged-catalog lifecycle checks, and one Route B run |
+| Route A steps | Every adapter claimed as supported, plus the preflight boundary scenarios |
+| Route B steps | The recommendation run, the combined-request scenario, and the thin-repository scenario |
+| One adapter's skill guidance or targets | That adapter's authoring scenario plus the boundary scenarios its targets participate in |
+| Portable format rules | One authoring scenario per adapter, checking frontmatter acceptance natively |
+
+### Prepare an authoring target
+
+Reuse the isolated-target preparation above, then add the small project
+resource the example use case needs, stage only the catalog, and capture a
+baseline so target writes are distinguishable from the known source copy:
+
+```bash
+mkdir -p "${SMOKE_ROOT:?}/docs"
+printf '# Release checklist\n\n1. Run the full test suite.\n2. Update the changelog.\n3. Tag and publish the release.\n' \
+  > "${SMOKE_ROOT:?}/docs/releasing.md"
+git -C "${SMOKE_ROOT:?}" add docs/releasing.md
+git -C "${SMOKE_ROOT:?}" -c user.name=Smoke -c user.email=smoke@example.invalid commit -m 'authoring resource'
+cp -R "${CATALOG_ROOT:?}" "${SMOKE_ROOT:?}/.agent-scaffold"
+git -C "${SMOKE_ROOT:?}" status --short > "${SMOKE_ROOT:?}/../authoring-baseline.txt"
+```
+
+The baseline is deliberately captured after staging, so it records the
+untracked `.agent-scaffold/` entry. In the final comparison, exactly two
+differences from this baseline are permitted: the authored skill paths at the
+selected destination, and — only when cleanup was explicitly requested and
+performed — the disappearance of the recorded `.agent-scaffold/` entry. Any
+other difference fails the scenario.
+
+Where an adapter supports a sibling source, also record its documented
+external-working-directory read-access or approval caveat in at least one run;
+this does not replace the required successful staged-source scenario.
+
+### Successful authoring scenarios
+
+For every adapter claimed as supported in v1 — Codex, Claude Code, GitHub
+Copilot, and Gemini CLI — use a fresh isolated target and one concrete
+instruction-only use case. The request supplies the selected adapter, two
+representative positive trigger prompts, and required project references up
+front; allow at most one bundled follow-up of at most three material
+questions. A staged-source example:
+
+> Read `.agent-scaffold/SKILLS.md` and author one new project skill for the
+> Codex client only. The skill should walk through the release checklist in
+> `docs/releasing.md`. Positive triggers: "prepare the next release" and
+> "walk me through cutting a release". Preserve all existing files, stop before writing
+> on an empty intersection or any same-name skill, and after successful
+> validation remove only this target's exact `.agent-scaffold` directory.
+
+Each scenario must record:
+
+- client name and exact version, checked official sources, catalog source
+  mode, and whether cleanup was explicitly requested and performed;
+- selected adapters and the calculated target intersection;
+- that exactly one skill was authored at the adapter's verified selected
+  target and only selected clients were considered;
+- native evidence that frontmatter and resources load: discovery/listing
+  (`/skills` in Codex and Claude, `/skills list` in Copilot and Gemini,
+  reload where the adapter documents it), one explicit invocation, both
+  positive triggers activating, and the derived nearby negative trigger not
+  activating (Gemini's per-activation permission prompt is expected trigger
+  evidence, not a failure);
+- exact changed paths, no managed-relationship claim, and Git state matching
+  the recorded baseline except for the authored skill paths and any
+  explicitly authorized `.agent-scaffold/` removal, as defined in the
+  preparation step above.
+
+When verified intersections permit, a shared `.agents/skills/` scenario may
+cover a Codex + Copilot + Gemini selection and a shared `.claude/skills/`
+scenario may cover Claude + Copilot; a shared scenario satisfies an adapter's
+successful scenario only when the evidence still clearly proves that
+adapter's own discovery and trigger behavior.
+
+### Recommendation (Route B) scenarios
+
+At least one successful read-only run is mandatory. From a readable sibling
+catalog where possible:
+
+> Read `<catalog>/SKILLS.md` and recommend at most three skill candidates for
+> this repository, backed by exact repository evidence paths. Make no changes
+> to this project's content.
+
+Confirm the report contains between one and three candidates with exact
+evidence paths and classification rationale, route-specific reporting, no
+project-content change, and — when the fixture exposes native client
+configuration — clients labeled as detected rather than selected with their
+target-intersection consequence. When an explicitly cleanup-authorized exact
+staged copy is used instead, confirm the staged source is removed only after
+the report succeeds.
+
+Also run both Route B boundary scenarios on fresh targets:
+
+- a combined "recommend and author the best candidate" request executes only
+  Route B, asks no route-choice question, changes nothing, and directs the
+  user to a later explicit Route A request;
+- a deliberately thin repository produces an honest no-candidate report,
+  changes nothing, and still applies the successful-report cleanup rule when
+  exact staged-source cleanup was explicitly requested.
+
+### Preflight boundary scenarios
+
+Use fresh targets to prove each stop changes nothing and retains staging:
+
+- a representative empty intersection — at minimum Codex + Claude while it
+  remains empty — reports both exact ordered target lists;
+- the all-four selection changes nothing while its intersection stays empty;
+- an equivalent skill at the selected destination is a no-op with no rewritten
+  content or timestamp;
+- an equivalent same-name skill at an alternate declared root reports that
+  exact root and creates no preferred-path duplicate;
+- a non-equivalent same-name skill at the selected or an alternate declared
+  root reports a conflict and stops every authoring write;
+- an unsafe, traversing, unwritable, denied, or symlink-escaping destination
+  stops before all writes;
+- no symlink or second copy is offered as an automatic workaround.
+
+### Staged-catalog lifecycle checks
+
+Prove that cleanup stays exact and explicit:
+
+- explicit cleanup after successful authoring removes only the re-resolved
+  exact staged `.agent-scaffold/`;
+- an explicitly cleanup-authorized chosen-destination no-op removes only that
+  exact staged source after equivalence and validation succeed;
+- a successful Route B report removes only its explicitly cleanup-authorized
+  exact staged source;
+- no-skill classification, empty intersection, alternate-root equivalence,
+  conflict, denied permission, and validation failure all retain staging;
+- a sibling or other external catalog is never removed;
+- a cleanup request aimed at a symlink, the target itself, or any non-exact
+  source is rejected without broadening cleanup.
+
+A blocked permission check or empty-intersection run is boundary evidence,
+not a replacement for successful authoring and native triggering. Record
+client or trust limitations separately from product passes.
