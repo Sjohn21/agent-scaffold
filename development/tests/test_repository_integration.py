@@ -188,6 +188,50 @@ class RepositoryIntegrationTests(unittest.TestCase):
                         CHECK_CATALOG.validate_repository(repo_root),
                     )
 
+    def test_codex_read_only_dogfood_requires_read_only_sandbox(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo_root = Path(temporary)
+            _copy_repository_inputs(repo_root)
+            relative = Path(".codex/agents/reviewer.toml")
+            path = repo_root / relative
+            source = path.read_text(encoding="utf-8")
+            path.write_text(
+                source.replace(
+                    'sandbox_mode = "read-only"',
+                    'sandbox_mode = "workspace-write"',
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            self.assertIn(
+                f'{relative.as_posix()} must keep read-only sandbox_mode = '
+                '"read-only"',
+                CHECK_CATALOG.validate_repository(repo_root),
+            )
+
+    def test_claude_read_only_dogfood_rejects_edit_tools(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo_root = Path(temporary)
+            _copy_repository_inputs(repo_root)
+            relative = Path(".claude/agents/reviewer.md")
+            path = repo_root / relative
+            source = path.read_text(encoding="utf-8")
+            path.write_text(
+                source.replace(
+                    "tools: Read, Grep, Glob, Bash",
+                    "tools: Read, Grep, Glob, Bash, Edit",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            self.assertIn(
+                f"{relative.as_posix()} must keep read-only tools: "
+                "Read, Grep, Glob, Bash",
+                CHECK_CATALOG.validate_repository(repo_root),
+            )
+
     def test_claude_body_allows_markdown_frontmatter_delimiter_lines(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo_root = Path(temporary)

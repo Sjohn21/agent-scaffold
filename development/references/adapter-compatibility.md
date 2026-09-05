@@ -73,22 +73,24 @@ additionally checked against the current Claude Code documentation on
 - [Project memory](https://code.claude.com/docs/en/memory) supports root
   `CLAUDE.md` loading and the `@AGENTS.md` import used to share existing project
   instructions without replacing them.
-- [Agent skills](https://code.claude.com/docs/en/skills) supports the project
-  `.claude/skills/<skill>/SKILL.md` target. Rechecked 2026-09-01 for skills
+- [Agent skills](https://code.claude.com/docs/en/slash-commands) supports the
+  project `.claude/skills/<skill>/SKILL.md` target. Rechecked 2026-09-05 for skills
   authoring: the documented skill locations are enterprise, personal
   `~/.claude/skills/`, project `.claude/skills/` (including parent and nested
   directories), and plugins; `.agents/skills/` is not documented as a Claude
   discovery root, so the Codex + Claude and Claude + Gemini repository
   intersections stay empty. On duplicate names, enterprise overrides personal
   and personal overrides project; a project skill replaces a same-name bundled
-  skill. Claude Code follows the open Agent Skills standard and treats every
-  frontmatter field as optional with `description` recommended; the invocation
-  command comes from the skill directory name, so the portable
+  skill. The name `synced` is reserved case-insensitively at enterprise,
+  personal and project levels; Claude Code skips a user-authored skill with
+  that name. Claude Code follows the open Agent Skills standard and treats
+  every frontmatter field as optional with `description` recommended; the
+  invocation command comes from the skill directory name, so the portable
   name-equals-directory rule stays compatible. Native checks are the `/skills`
   menu, `/<skill-name>` explicit invocation, and live change detection without
-  a restart (a newly created top-level skills directory needs one). An
-  external catalog outside the working directory is readable through
-  `--add-dir`/`/add-dir` or a per-read approval.
+  a restart (a newly created top-level skills directory needs one). An external
+  catalog outside the working directory is readable through `--add-dir` or
+  `/add-dir`, or with a per-read approval.
 - [Extend Claude Code](https://code.claude.com/docs/en/features-overview)
   supports the classification boundary used for skill recommendations:
   always-applicable conventions belong in `CLAUDE.md`, on-demand reference
@@ -116,10 +118,17 @@ environment-specific agents can expose additional tools or properties.
   supports the project `.github/skills/<skill>/SKILL.md`,
   `.agents/skills/<skill>/SKILL.md`, and `.claude/skills/<skill>/SKILL.md`
   targets. Rechecked 2026-09-01: all three project roots remain documented for
-  the Copilot cloud agent, code review, CLI, app, and IDE agent-mode surfaces,
-  with no documented precedence or duplicate-name rule between them; the
-  manifest's ordering is this catalog's own preference policy with the
-  Copilot-specific root first.
+  the Copilot cloud agent, code review, CLI, app, and IDE agent-mode surfaces.
+  This general page documents no precedence or duplicate-name rule shared by
+  all of those surfaces.
+- [Copilot CLI command reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#skills-reference)
+  and [CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference#loading-order-and-precedence)
+  were checked 2026-09-05 and document CLI-specific first-found-wins skill
+  precedence: project `.github/skills/`, then `.agents/skills/`, then
+  `.claude/skills/`, followed by lower-priority sources. The manifest already
+  uses this order. Because the general page above does not establish that the
+  same duplicate behavior applies to every Copilot surface, cross-surface
+  authoring retains conservative same-name preflight at all declared roots.
 - [Adding agent skills for Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills)
   supports required lowercase hyphenated `name` and required `description`
   frontmatter with optional `license`; bundled scripts and resources that are

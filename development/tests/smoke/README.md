@@ -291,6 +291,8 @@ Use fresh targets to prove each stop changes nothing and retains staging:
   root reports a conflict and stops every authoring write;
 - an unsafe, traversing, unwritable, denied, or symlink-escaping destination
   stops before all writes;
+- a Claude selection using the reserved skill name `synced` reports the native
+  restriction, stops before all writes, and retains staging;
 - no symlink or second copy is offered as an automatic workaround.
 
 ### Staged-catalog lifecycle checks

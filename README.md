@@ -253,9 +253,9 @@ Open the target repository in your coding client and use this prompt:
 > validate the result, then remove only this target's exact `.agent-scaffold`
 > directory after validation succeeds.
 
-The installation agent may remove only that exact temporary copy, only after
-successful validation, and only because the prompt explicitly requests it. It
-must never remove a sibling checkout or another source path.
+The installation contract removes only that exact temporary copy after
+successful validation; the prompt repeats that automatic behavior explicitly.
+It must never remove a sibling checkout or another source path.
 
 ## Author a project skill
 

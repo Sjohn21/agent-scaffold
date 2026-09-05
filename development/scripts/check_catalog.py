@@ -36,6 +36,9 @@ STANDALONE_CONTRACTS = ("INSTALL.md", "SKILLS.md")
 CODEX_BODY_DELIMITER = '"""'
 CODEX_BODY_OPENING = f"developer_instructions = {CODEX_BODY_DELIMITER}\n"
 CODEX_BODY_CLOSING = CODEX_BODY_DELIMITER
+CODEX_SETTING = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(.*?)\s*$")
+CODEX_READ_ONLY_SANDBOX = '"read-only"'
+CLAUDE_READ_ONLY_TOOLS = "Read, Grep, Glob, Bash"
 CATALOG_PLACEHOLDER = re.compile(r"<[^<>]+>")
 WINDOWS_DRIVE_PATH = re.compile(r"^[A-Za-z]:")
 REPOSITORY_VALIDATION_SKIPPED = (
@@ -187,7 +190,7 @@ def _frontmatter(
     return metadata, "\n".join(lines[end + 1 :]).strip()
 
 
-def _claude_agent_body(path: Path) -> str:
+def _claude_agent_parts(path: Path) -> tuple[dict[str, list[str]], str]:
     lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     if not lines or lines[0].rstrip("\r\n") != "---":
         raise ValueError("must start with a YAML frontmatter block")
@@ -199,7 +202,18 @@ def _claude_agent_body(path: Path) -> str:
         )
     except StopIteration as error:
         raise ValueError("has an unclosed YAML frontmatter block") from error
-    return "".join(lines[end + 1 :]).strip()
+    metadata: dict[str, list[str]] = {}
+    for line in lines[1:end]:
+        field = line.rstrip("\r\n")
+        if field[:1].isspace() or ": " not in field:
+            continue
+        key, value = field.split(": ", 1)
+        metadata.setdefault(key, []).append(value)
+    return metadata, "".join(lines[end + 1 :]).strip()
+
+
+def _claude_agent_body(path: Path) -> str:
+    return _claude_agent_parts(path)[1]
 
 
 def _canonical_body_source(path: Path) -> str:
@@ -237,7 +251,7 @@ def _codex_body_constraint_errors(agent_name: object, body: str) -> list[str]:
     return errors
 
 
-def _codex_agent_body(path: Path) -> str:
+def _codex_agent_parts(path: Path) -> tuple[str, str]:
     text = path.read_text(encoding="utf-8")
     if (
         text.count(CODEX_BODY_OPENING) != 1
@@ -246,14 +260,36 @@ def _codex_agent_body(path: Path) -> str:
         raise ValueError(
             "must contain exactly one bounded developer_instructions field"
         )
-    body, suffix = text.split(CODEX_BODY_OPENING, 1)[1].split(
-        CODEX_BODY_CLOSING, 1
-    )
+    prefix, instructions = text.split(CODEX_BODY_OPENING, 1)
+    body, suffix = instructions.split(CODEX_BODY_CLOSING, 1)
     if suffix and not suffix.startswith("\n"):
         raise ValueError(
             "must contain exactly one bounded developer_instructions field"
         )
-    return body
+    return prefix + suffix, body
+
+
+def _codex_agent_body(path: Path) -> str:
+    return _codex_agent_parts(path)[1]
+
+
+def _read_only_dogfood_error(adapter: str, path: Path) -> str | None:
+    if adapter == "claude":
+        metadata, _ = _claude_agent_parts(path)
+        if metadata.get("tools") != [CLAUDE_READ_ONLY_TOOLS]:
+            return f"must keep read-only tools: {CLAUDE_READ_ONLY_TOOLS}"
+        return None
+
+    metadata, _ = _codex_agent_parts(path)
+    sandbox_values = [
+        match.group(2)
+        for line in metadata.splitlines()
+        if (match := CODEX_SETTING.fullmatch(line))
+        and match.group(1) == "sandbox_mode"
+    ]
+    if sandbox_values != [CODEX_READ_ONLY_SANDBOX]:
+        return 'must keep read-only sandbox_mode = "read-only"'
+    return None
 
 
 def validate_catalog(catalog_root: Path) -> list[str]:
@@ -624,14 +660,23 @@ def validate_repository(repo_root: Path) -> list[str]:
             errors.append(f"missing dogfood agent: {native_relative.as_posix()}")
             continue
         try:
-            _, canonical_body = _frontmatter(canonical_path, repo_root)
+            canonical_metadata, canonical_body = _frontmatter(
+                canonical_path, repo_root
+            )
         except (OSError, ValueError):
             continue
         try:
             native_body = extractors[adapter](native_path)
+            permission_error = (
+                _read_only_dogfood_error(adapter, native_path)
+                if canonical_metadata["read_only"] == "true"
+                else None
+            )
         except (OSError, ValueError) as error:
             errors.append(f"{native_relative.as_posix()} {error}")
             continue
+        if permission_error:
+            errors.append(f"{native_relative.as_posix()} {permission_error}")
         if native_body != canonical_body:
             errors.append(
                 f"{native_relative.as_posix()} body drifted from canonical agent "

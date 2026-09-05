@@ -100,6 +100,10 @@ keywords. Adapter-only frontmatter fields stay outside this contract.
 
 ### A4. Preflight every declared discovery root
 
+Apply every native skill-name restriction documented by the selected adapters.
+An adapter-specific invalid or reserved name stops all authoring writes; do not
+weaken that restriction merely because the name passes the portable format.
+
 Substitute the validated skill name into every `skill_targets` entry of every
 selected adapter, not only the chosen destination. For each resulting
 repository path:

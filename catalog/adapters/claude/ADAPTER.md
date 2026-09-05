@@ -46,10 +46,12 @@ For a separately requested project skill governed by `SKILLS.md`, the
 compatible location is `.claude/skills/<skill>/SKILL.md`; Claude Code
 documents no other repository skill root, so selections combining Claude with
 an adapter that lacks this path have no common destination. This installation
-does not create skills or symlink another adapter's skill tree. The
-invocation command comes from the skill directory name, and a same-name
-personal or enterprise skill overrides the project copy, so report that
-shadowing possibility rather than claiming repository inspection settles it.
+does not create skills or symlink another adapter's skill tree. Reject the
+reserved skill name `synced` case-insensitively before every authoring write;
+Claude Code skips a user-authored skill with that name. The invocation command
+comes from the skill directory name, and a same-name personal or enterprise
+skill overrides the project copy, so report that shadowing possibility rather
+than claiming repository inspection settles it.
 Reading a catalog outside the working directory needs an added directory
 (`--add-dir` or `/add-dir`) or a per-read approval. Verify natively with the
 `/skills` listing and `/<skill>` explicit invocation; changes to an existing

@@ -39,9 +39,10 @@ compatible targets in preference order are `.github/skills/<skill>/SKILL.md`,
 `.agents/skills/<skill>/SKILL.md` and `.claude/skills/<skill>/SKILL.md`. This
 installation does not create skills. The first target is Copilot-specific;
 the other two can be deliberate shared native locations when another selected
-client supports them. Copilot documents no precedence or duplicate-name rule
-between these roots, so preflight must treat a same-name definition at any of
-them as significant. Reading a catalog outside the working directory follows
-the CLI's normal directory-access approval. Verify natively with
-`/skills list`, `/skills reload` after adding a skill mid-session, and an
-explicit `/<skill>` invocation in a prompt.
+client supports them. Copilot CLI documents first-found-wins precedence between
+these roots in this order. The general documentation for other Copilot surfaces
+does not establish their precedence, so preflight must still treat a same-name
+definition at any declared root as significant. Reading a catalog outside the
+working directory follows the CLI's normal directory-access approval. Verify
+natively with `/skills list`, `/skills reload` after adding a skill mid-session,
+and an explicit `/<skill>` invocation in a prompt.
