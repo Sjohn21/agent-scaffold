@@ -18,7 +18,7 @@ practical first setup is your client's adapter with `reviewer` and
 
 - [Quick start](#quick-start)
 - [Choose what to install](#choose-what-to-install)
-- [More copy-paste installation recipes](#more-copy-paste-installation-recipes)
+- [Installation recipes](#installation-recipes)
 - [One-off catalog copy](#one-off-catalog-copy)
 - [Author a project skill](#author-a-project-skill)
 - [What installation does](#what-installation-does)
@@ -28,8 +28,14 @@ practical first setup is your client's adapter with `reviewer` and
 
 ## Quick start
 
-The simplest reusable setup is to keep agent-scaffold next to the repository
-you want to configure:
+### 1. Get agent-scaffold
+
+Clone the checkout next to the repository you want to configure:
+
+```bash
+cd /absolute/path/to/workspace
+git clone https://github.com/Sjohn21/agent-scaffold.git
+```
 
 ```text
 workspace/
@@ -37,55 +43,48 @@ workspace/
 `-- your-project/
 ```
 
-1. Replace the two paths below and verify that you have the right source and
-   target:
+Update an existing checkout with `git pull` in it. If you would rather not keep
+the checkout next to the target, use the
+[one-off catalog copy](#one-off-catalog-copy) instead.
 
-   ```bash
-   (
-     AGENT_SCAFFOLD="/absolute/path/to/agent-scaffold"
-     TARGET_REPOSITORY="/absolute/path/to/your-project"
+### 2. Open the target repository
 
-     if [ ! -f "$AGENT_SCAFFOLD/catalog/INSTALL.md" ]; then
-       printf 'catalog not found: %s\n' "$AGENT_SCAFFOLD/catalog" >&2
-       exit 1
-     fi
-     if [ ! -d "$TARGET_REPOSITORY" ]; then
-       printf 'target directory not found: %s\n' "$TARGET_REPOSITORY" >&2
-       exit 1
-     fi
-     printf 'catalog: %s\ntarget:  %s\n' \
-       "$AGENT_SCAFFOLD/catalog" "$TARGET_REPOSITORY"
-   )
-   ```
+Open `your-project` in the coding client you want to configure: Codex, Claude
+Code, GitHub Copilot, or Gemini CLI.
 
-2. Open the repository at the `target:` path printed by step 1 in the supported
-   coding client you want to configure.
+### 3. Send the installation prompt
 
-3. For the Codex quick-start selection, copy the `catalog:` value printed by
-   step 1 into this prompt in place of the single absolute-path placeholder,
-   then send it:
+Replace the placeholder with the absolute path to your checkout, then send the
+prompt. This example selects Codex; for another client use one of the
+[installation recipes](#installation-recipes). Native target paths are selected
+automatically by the adapter.
 
-   > Read `/absolute/path/to/agent-scaffold/catalog/INSTALL.md` and install
-   > into this repository. Install only the Codex adapter with the `reviewer`
-   > and `test-runner` agents; install no optional components. Use explicit
-   > model inheritance for both agents. Preserve and merge existing project
-   > instructions and native configuration, stop before every write if any
-   > destination conflicts or is not writable, validate the installed TOML and
-   > selected-file scope, and leave the sibling catalog in place.
+> Read `/absolute/path/to/agent-scaffold/catalog/INSTALL.md` and install into
+> this repository. Install only the Codex adapter with the `reviewer` and
+> `test-runner` agents; install no optional components. Preserve and merge
+> existing project instructions and native configuration, stop before every
+> write if any destination conflicts or is not writable, validate the result,
+> and leave the sibling catalog in place.
 
-   Recipes for the exact `claude`, `copilot`, and `gemini` adapter selections
-   follow below. Native target paths are selected automatically by the adapter.
+### 4. Answer the model question
 
-4. Review the agent's preflight and final report. A normal Codex result for the
-   prompt above is:
+The prompt names no model, so the agent asks one bundled question before it
+writes anything. Choose the recommended role-specific mapping, explicit
+inheritance for every agent, or your own exact model names. To decide up front
+and skip this question, see [Models](#models).
 
-   ```text
-   your-project/
-   |-- AGENTS.md
-   `-- .codex/agents/
-       |-- reviewer.toml
-       `-- test-runner.toml
-   ```
+### 5. Review the preflight and report
+
+Nothing is written until destinations, conflicts, and your model choice are
+resolved. A normal Codex result for the prompt above is:
+
+```text
+your-project/
+|-- AGENTS.md
+`-- .codex/agents/
+    |-- reviewer.toml
+    `-- test-runner.toml
+```
 
 Existing instructions must remain intact. Unselected clients, agents, optional
 components, and skills must remain absent.
@@ -127,29 +126,48 @@ agents do not require it.
 ### Models
 
 Every selected adapter-agent pair needs either an exact model or explicit
-inheritance:
+inheritance. By default you do not decide this up front: a prompt that names no
+model makes the installation agent ask one bundled question before any write,
+offering a recommended role-specific mapping, explicit inheritance for every
+pair, or your own exact names. Nothing is written until you confirm.
 
-- Add `Use explicit model inheritance for every selected adapter-agent pair`
-  for the most portable, no-follow-up prompt.
-- Omit the model choice when you want the installation agent to recommend a
-  role-specific mapping. It will present one bundled question before writing.
-- Supply exact model names only when your active client confirms those names.
-  The catalog deliberately contains no fixed provider ranking.
+Model choice is a deliberate quality, latency, and cost lever, so asking is the
+default. Add one of these lines only when you want to skip the question:
 
-## More copy-paste installation recipes
+| Add this line to the prompt | Effect |
+| --- | --- |
+| `Use explicit model inheritance for every selected adapter-agent pair` | Every installed agent runs on the client's inherited or default model. The most portable choice. |
+| `Use <exact model> for <agent>`, once per pair or per adapter | Pins exact names. Supply names only when your active client confirms them; the catalog contains no fixed provider ranking and never guesses a name. |
+
+Selecting an adapter with zero agents needs no model choice at all, and no
+question is asked.
+
+## Installation recipes
 
 Each prompt below is complete except for the absolute path to this checkout.
-Open the target repository in the named client before sending it.
+Open the target repository in the named client before sending it. None of them
+names a model, so every recipe that selects at least one agent ends in the
+bundled model question described under [Models](#models).
+
+### Adjust any recipe
+
+| To change | Edit the prompt like this |
+| --- | --- |
+| Skip the model question | Add `Use explicit model inheritance for every selected adapter-agent pair` |
+| Install every cataloged agent | Replace the agent list with `all` agents |
+| Install for several clients at once | Name each one: `the Claude and Codex adapters` |
+| Add the reusable plan template | Add `plus the optional plan-examples component` |
+| Install shared guidance only | Ask for the adapter `with no agents` |
+| Work from a staged copy instead of a sibling checkout | Use the [one-off catalog copy](#one-off-catalog-copy) |
 
 ### Claude Code: review and test helpers
 
 > Read `/absolute/path/to/agent-scaffold/catalog/INSTALL.md` and install into
 > this repository. Install only the Claude adapter with the `reviewer` and
-> `test-runner` agents; install no optional components. Use explicit model
-> inheritance for both agents. Preserve and merge existing `AGENTS.md`,
-> `CLAUDE.md`, and native agent configuration, stop before every write if any
-> destination conflicts or is not writable, validate the result, and leave the
-> sibling catalog in place.
+> `test-runner` agents; install no optional components. Preserve and merge
+> existing `AGENTS.md`, `CLAUDE.md`, and native agent configuration, stop
+> before every write if any destination conflicts or is not writable, validate
+> the result, and leave the sibling catalog in place.
 
 Expected native agents:
 
@@ -162,11 +180,10 @@ Expected native agents:
 
 > Read `/absolute/path/to/agent-scaffold/catalog/INSTALL.md` and install into
 > this repository. Install only the Copilot adapter with the `plan-search` and
-> `reviewer` agents; install no optional components. Use explicit model
-> inheritance for both agents. Preserve and merge existing project instructions
-> and native configuration, stop before every write if any destination
-> conflicts or is not writable, validate the result, and leave the sibling
-> catalog in place.
+> `reviewer` agents; install no optional components. Preserve and merge
+> existing project instructions and native configuration, stop before every
+> write if any destination conflicts or is not writable, validate the result,
+> and leave the sibling catalog in place.
 
 Expected native agents:
 
@@ -180,10 +197,9 @@ Expected native agents:
 > Read `/absolute/path/to/agent-scaffold/catalog/INSTALL.md` and install into
 > this repository. Install only the Gemini adapter with the `plan-search`,
 > `plan-implementer`, and `reviewer` agents, plus the optional `plan-examples`
-> component. Use explicit model inheritance for every selected agent. Preserve
-> and merge existing `AGENTS.md`, `GEMINI.md`, and native configuration, stop
-> before every write if any destination conflicts or is not writable, validate
-> the result, and leave the sibling catalog in place.
+> component. Preserve and merge existing `AGENTS.md`, `GEMINI.md`, and native
+> configuration, stop before every write if any destination conflicts or is not
+> writable, validate the result, and leave the sibling catalog in place.
 
 Expected additions include:
 
@@ -196,7 +212,7 @@ Expected additions include:
 
 ### Shared guidance without specialist agents
 
-This requires no model choice:
+This selects zero agents, so no model question is asked:
 
 > Read `/absolute/path/to/agent-scaffold/catalog/INSTALL.md` and install into
 > this repository. Install only the Claude adapter, with no agents and no
@@ -209,9 +225,8 @@ This requires no model choice:
 
 > Read `/absolute/path/to/agent-scaffold/catalog/INSTALL.md` and install into
 > this repository. Install the Codex, Claude, Copilot, and Gemini adapters with
-> `all` agents, plus the optional `plan-examples` component. Use explicit model
-> inheritance for every selected adapter-agent pair. Preserve and merge all
-> existing project instructions and native configuration, stop before every
+> `all` agents, plus the optional `plan-examples` component. Preserve and merge
+> all existing project instructions and native configuration, stop before every
 > write if any destination conflicts or is not writable, validate every native
 > format and the selected-file scope, and leave the sibling catalog in place.
 
@@ -247,11 +262,10 @@ Open the target repository in your coding client and use this prompt:
 
 > Read `.agent-scaffold/INSTALL.md` and install into this repository. Install
 > only the Codex adapter with the `reviewer` and `test-runner` agents; install
-> no optional components. Use explicit model inheritance for both agents.
-> Preserve and merge existing project instructions and native configuration,
-> stop before every write if any destination conflicts or is not writable,
-> validate the result, then remove only this target's exact `.agent-scaffold`
-> directory after validation succeeds.
+> no optional components. Preserve and merge existing project instructions and
+> native configuration, stop before every write if any destination conflicts or
+> is not writable, validate the result, then remove only this target's exact
+> `.agent-scaffold` directory after validation succeeds.
 
 The installation contract removes only that exact temporary copy after
 successful validation; the prompt repeats that automatic behavior explicitly.
@@ -316,7 +330,7 @@ Before writing, the installation agent:
 
 - reads the target's existing guidance and relevant project files;
 - resolves every selected native destination;
-- asks one bundled question if model choices are incomplete;
+- asks one bundled model question unless the prompt already names every choice;
 - reports conflicts or unwritable destinations and stops all writes;
 - preserves existing instructions and unrelated native configuration.
 
